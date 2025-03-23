@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الكود الاصلي لمبادرة اختيار التخصص</title>
+  <style>
+    /* الإعدادات العامة للصفحة */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      direction: rtl;
+      background: linear-gradient(135deg, #f7f9fc, #e2e8f0);
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    header h1 {
+      font-size: 2.5em;
+      color: #2c3e50;
+    }
+    section {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    h2 {
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      color: #2980b9;
+    }
+    label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+    }
+    input[type="text"], select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1em;
+      padding: 12px;
+      width: 100%;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    /* تنسيق كل سؤال مع خلفيات متناوبة */
+    .question {
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .question:nth-of-type(odd) {
+      background: rgba(52, 152, 219, 0.1);
+    }
+    .question:nth-of-type(even) {
+      background: rgba(52, 152, 219, 0.2);
+    }
+    .options {
+      margin-left: 20px;
+    }
+    /* تنسيق خيارات الإجابة: زر الاختيار على اليمين والنص محاذى لليسار */
+    .option {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .option input {
+      margin-left: auto; /* يدفع زر الراديو إلى أقصى اليمين */
+      transform: scale(1.2);
+    }
+    .option label {
+      text-align: right;
+      flex: 1;
+    }
+    fieldset {
+      margin-bottom: 25px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    legend {
+      font-weight: bold;
+      padding: 0 10px;
+      color: #2c3e50;
+    }
+    /* تنسيق قسم عرض النتائج */
+    #resultDisplay {
+      font-size: 1.5em;
+      text-align: center;
+      margin-top: 20px;
+    }
+    /* تنسيق النتيجة مع العنوان والرسالة */
+    .result-title {
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .result-msg {
+      font-size: 1.2em;
+      color: #555;
+    }
+    /* تنسيق عبارة بداية المرحلة الثانية */
+    #phase2Msg {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #e67e22;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+  </style>
+  <!-- تضمين مكتبة Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+  <header>
+    <h1>الاختيار الذكي</h1>
+  </header>
+
+  <!-- المرحلة الأولى: بيانات الطالب والأسئلة الأساسية -->
+  <section id="phase1">
+    <h2>المرحلة الأولى: تحديد الميل</h2>
+    <form id="phase1Form">
+      <!-- بيانات الطالب -->
+      <label for="studentName">اسم الطالب:</label>
+      <input type="text" id="studentName" name="studentName" placeholder="أدخل اسم الطالب" required>
+      
+      <label for="schoolName">اسم المدرسة:</label>
+      <input type="text" id="schoolName" name="schoolName" placeholder="أدخل اسم المدرسة" required>
+      
+      <!-- الأسئلة الأساسية (خمسة أسئلة) -->
+      <div class="question">
+        <label>1. عندما تدرس درسًا جديدًا، هل تفضل قراءة الشرح في الكتب والنقاش مع المعلم أم تجربة الأنشطة العملية بنفسك؟</label>
+        <div class="options">
+          <div class="option">
+            <input type="radio" id="q1a" name="q1" value="A" required>
+            <label for="q1a">(أ) أفضل قراءة الشرح والنقاش (أكاديمي).</label>
+          </div>
+          <div class="option">
+            <input type="radio" id="q1b" name="q1" value="B">
+            <label for="q1b">(ب) أستخدم الاثنين معًا.</label>
+          </div>
+          <div class="option">
+            <input type="radio" id="q1c" name="q1" value="C">
+            <label for="q1c">(ج) أفضل تجربة الأنشطة العملية (مهني).</label>
+          </div>
+        </div>
+      </div>
+      <div class="question">
+        <label>2. عند حل تمرين أو مشروع في المدرسة، هل تحب البحث عن المعلومات في الكتب أو تفضل التطبيق العملي والتجربة؟</label>
+        <div class="options">
+          <div class="option">
+            <input type="radio" id="q2a" name="q2" value="A" required>
+            <label for="q2a">(أ) أحب البحث وقراءة المعلومات (أكاديمي).</label>
+          </div>
+          <div class="option">
+            <input type="radio" id="q2b" name="q2" value="B">
+            <label for="q2b">(ب) أستفيد من البحث والتجربة معًا.</label>
+          </div>
+          <div class="option">
+            <input type="radio" id="q2c" name="q2" value="C">
+            <label for="q2c">(ج) أفضل التطبيق العملي والتجربة (مهني).</label>
+          </div>
+        </div>
+      </div>
+      <div class="question">
+        <label>3. في نشاطات المدرسة، هل تستمتع أكثر بالمشاركة في ورش عمل عملية أم بحل مسائل نظرية في الصف؟</label>
+        <div class="options">
+          <div class="option">
+            <input type="radio" id="q3a" name="q3" value="A" required>
+            <label for="q3a">(أ) أستمتع بحل المسائل النظرية (أكاديمي).</label>
+          </div>
+          <div class="option">
+            <input type="radio" id="q3b" name="q3" value="B">
+            <label for="q3b">(ب) أستمتع بكلا النشاطين معًا.</label>
+          </div>
+          <div class="option">
+            <input type="radio" id="q3c" name="q3" value="C">
+            <label for="q3c">(ج) أستمتع بالمشاركة في ورش العمل العملية (مهني).</label>
+          </div>
+        </div>
+      </div>
+      <div class="question">
+        <label>4. عندما تواجه مشكلة في الواجب، هل تفضل قراءة الشروحات والنظريات لحلها أم تجربة الحلول بنفسك؟</label>
+        <div class="options">
+          <div class="option">
+            <input type="radio" id="q4a" name="q4" value="A" required>
+            <label for="q4a">(أ) أقرأ الشروحات وأستخدم النظريات (أكاديمي).</label>
+          </div>
+          <div class="option">
+            <input type="radio" id="q4b" name="q4" value="B">
+            <label for="q4b">(ب) أستخدم كلا الطريقتين معًا.</label>
+          </div>
+          <div class="option">
+            <input type="radio" id="q4c" name="q4" value="C">
+            <label for="q4c">(ج) أفضل تجربة الحلول عمليًا (مهني).</label>
+          </div>
+        </div>
+      </div>
+      <div class="question">
+        <label>5. هل ترى نفسك في المستقبل تعمل في وظيفة تعتمد على الدراسة والبحث أم في وظيفة تعتمد على المهارات العملية والتطبيق؟</label>
+        <div class="options">
+          <div class="option">
+            <input type="radio" id="q5a" name="q5" value="A" required>
+            <label for="q5a">(أ) أرى نفسي أعمل في وظيفة تعتمد على البحث والنظريات (أكاديمي).</label>
+          </div>
+          <div class="option">
+            <input type="radio" id="q5b" name="q5" value="B">
+            <label for="q5b">(ب) قد أعمل في وظيفة تجمع بين الاثنين.</label>
+          </div>
+          <div class="option">
+            <input type="radio" id="q5c" name="q5" value="C">
+            <label for="q5c">(ج) أرى نفسي أعمل في وظيفة تعتمد على المهارات العملية (مهني).</label>
+          </div>
+        </div>
+      </div>
+      <button type="submit">إرسال المرحلة الأولى</button>
+    </form>
+  </section>
+
+  <!-- المرحلة الثانية: استبيان مفصل لتحديد التخصص المهني -->
+  <section id="phase2" style="display:none;">
+    <h2>المرحلة الثانية: اختيار التخصص المهني</h2>
+    <!-- العبارة المطلوبة في بداية المرحلة الثانية -->
+    <p id="phase2Msg">تم تحديد الميل المهني، يرجى متابعة المرحلة الثانية لاختيار التخصص المناسب.</p>
+    <form id="phase2Form">
+      <!-- لكل تخصص مجموعة من 5 أسئلة -->
+      <!-- 1. تخصص تكنولوجيا المعلومات -->
+      <fieldset id="group1">
+        <legend>تخصص تكنولوجيا المعلومات</legend>
+        <div class="question">
+          <label>1- ما مدى اهتمامك بتعلم أساسيات تكنولوجيا المعلومات واستخدام الحاسوب؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="it1a" name="it1" value="A" required>
+              <label for="it1a">(أ) مهتم جدًا؛ أتعلم بسرعة وأستمتع باستخدام الحاسوب.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="it1b" name="it1" value="B">
+              <label for="it1b">(ب) مهتم إلى حد ما؛ أتعلم ببطء وأحتاج لبعض الوقت.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="it1c" name="it1" value="C">
+              <label for="it1c">(ج) غير مهتم؛ أواجه صعوبة في استخدام الحاسوب.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>2- كيف تصف قدرتك على التعامل مع البرامج والتطبيقات على الحاسوب؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="it2a" name="it2" value="A" required>
+              <label for="it2a">(أ) ممتاز؛ أستخدمها بسهولة وأحب تجربة ميزاتها.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="it2b" name="it2" value="B">
+              <label for="it2b">(ب) متوسط؛ أستطيع استخدامها لكن أحتاج للمساعدة أحيانًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="it2c" name="it2" value="C">
+              <label for="it2c">(ج) ضعيف؛ أجد صعوبة في فهمها وتشغيلها.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>3- هل تستمتع بتجربة التطبيقات والأدوات الرقمية مثل الألعاب التعليمية أو برامج الرسم؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="it3a" name="it3" value="A" required>
+              <label for="it3a">(أ) نعم؛ أجدها ممتعة وتساعدني في تعلم معلومات جديدة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="it3b" name="it3" value="B">
+              <label for="it3b">(ب) أحيانًا؛ يعتمد ذلك على التطبيق ومدى بساطته.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="it3c" name="it3" value="C">
+              <label for="it3c">(ج) لا؛ لا أشعر بالمتعة أو الفائدة منها.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>4- عندما تواجه مشكلة تقنية على الحاسوب مثل توقف برنامج عن العمل، كيف تتصرف؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="it4a" name="it4" value="A" required>
+              <label for="it4a">(أ) أحاول البحث عن حل بنفسي عبر الإنترنت أو التجربة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="it4b" name="it4" value="B">
+              <label for="it4b">(ب) أطلب مساعدة المعلم أو زملائي لحل المشكلة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="it4c" name="it4" value="C">
+              <label for="it4c">(ج) أتجنب حل المشكلة ولا أعرف ماذا أفعل.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>5- هل ترغب في معرفة طرق حماية جهاز الكمبيوتر والبيانات من الاختراق؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="it5a" name="it5" value="A" required>
+              <label for="it5a">(أ) نعم؛ أعتقد أن تأمين المعلومات مهم جدًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="it5b" name="it5" value="B">
+              <label for="it5b">(ب) أحيانًا؛ أتعلمها إذا كانت بسيطة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="it5c" name="it5" value="C">
+              <label for="it5c">(ج) لا؛ لا أعتقد أنها ضرورية.</label>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 2. تخصص ادارة الاعمال -->
+      <fieldset id="group2">
+        <legend>تخصص ادارة الاعمال</legend>
+        <div class="question">
+          <label>1- هل تحب تخطيط وتنظيم الأنشطة أو الفعاليات في المدرسة؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="ba1a" name="ba1" value="A" required>
+              <label for="ba1a">(أ) نعم؛ أحب التخطيط وتنظيم الأحداث.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="ba1b" name="ba1" value="B">
+              <label for="ba1b">(ب) أحيانًا؛ أشارك إذا كان النشاط ممتعًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="ba1c" name="ba1" value="C">
+              <label for="ba1c">(ج) لا؛ أفضل عدم التخطيط.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>2- كيف تشعر عند العمل مع زملائك على مشروع مشترك؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="ba2a" name="ba2" value="A" required>
+              <label for="ba2a">(أ) متحمس؛ أحب التعاون والعمل الجماعي.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="ba2b" name="ba2" value="B">
+              <label for="ba2b">(ب) متردد؛ أحتاج لبعض الوقت للتأقلم مع الفريق.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="ba2c" name="ba2" value="C">
+              <label for="ba2c">(ج) لا أفضله؛ أفضل العمل بمفردي.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>3- هل تحب جمع المعلومات والبحث قبل اتخاذ قرار مثل اختيار نشاط مدرسي؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="ba3a" name="ba3" value="A" required>
+              <label for="ba3a">(أ) نعم؛ أبحث وأجمع المعلومات دائمًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="ba3b" name="ba3" value="B">
+              <label for="ba3b">(ب) أحيانًا؛ أبحث إذا كان القرار مهمًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="ba3c" name="ba3" value="C">
+              <label for="ba3c">(ج) لا؛ أتخذ القرارات بسرعة دون بحث.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>4- هل تستمتع باقتراح أفكار جديدة لتحسين الأنشطة المدرسية؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="ba4a" name="ba4" value="A" required>
+              <label for="ba4a">(أ) نعم؛ أحب تجربة أفكار جديدة ومبتكرة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="ba4b" name="ba4" value="B">
+              <label for="ba4b">(ب) أحيانًا؛ أكون مترددًا في اقتراح أفكار جديدة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="ba4c" name="ba4" value="C">
+              <label for="ba4c">(ج) لا؛ أفضل الطرق التقليدية دون تغيير.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>5- هل تجد أن تنظيم الوقت يساعدك في إدارة الأنشطة والمهام؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="ba5a" name="ba5" value="A" required>
+              <label for="ba5a">(أ) نعم؛ تنظيم الوقت يجعل الأمور أسهل.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="ba5b" name="ba5" value="B">
+              <label for="ba5b">(ب) أحيانًا؛ أحاول تنظيم وقتي لكن ليس دائمًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="ba5c" name="ba5" value="C">
+              <label for="ba5c">(ج) لا؛ لا أرى أهمية كبيرة لتنظيم الوقت.</label>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 3. تخصص الهندسة -->
+      <fieldset id="group3">
+        <legend>تخصص الهندسة</legend>
+        <div class="question">
+          <label>1- هل تحب استخدام الأدوات لصنع أو إصلاح الأشياء؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="eng1a" name="eng1" value="A" required>
+              <label for="eng1a">(أ) نعم، أحب ذلك كثيرًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="eng1b" name="eng1" value="B">
+              <label for="eng1b">(ب) أحيانًا، إذا كان الأمر ممتعًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="eng1c" name="eng1" value="C">
+              <label for="eng1c">(ج) لا، أفضل الدراسة النظرية.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>2- هل تهتم بمعرفة كيفية عمل الأجهزة والآلات؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="eng2a" name="eng2" value="A" required>
+              <label for="eng2a">(أ) نعم، أحب أن أتعرف على كيفية عملها.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="eng2b" name="eng2" value="B">
+              <label for="eng2b">(ب) أحيانًا، إذا كانت المعلومات بسيطة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="eng2c" name="eng2" value="C">
+              <label for="eng2c">(ج) لا، لا أهتم كثيرًا.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>3- عندما تواجه مشكلة في مشروع عملي، ماذا تفعل عادةً؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="eng3a" name="eng3" value="A" required>
+              <label for="eng3a">(أ) أحاول حل المشكلة بنفسي.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="eng3b" name="eng3" value="B">
+              <label for="eng3b">(ب) أطلب مساعدة من زملائي أو المعلم.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="eng3c" name="eng3" value="C">
+              <label for="eng3c">(ج) أتجنب حل المشكلة.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>4- هل تحب المشاركة في الأنشطة التي تتطلب بناء نموذج أو جهاز؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="eng4a" name="eng4" value="A" required>
+              <label for="eng4a">(أ) نعم، أحب المشاركة والعمل العملي.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="eng4b" name="eng4" value="B">
+              <label for="eng4b">(ب) أحيانًا، حسب المشروع.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="eng4c" name="eng4" value="C">
+              <label for="eng4c">(ج) لا، أفضل القراءة والدراسة.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>5- كيف تشعر عندما يُطلب منك استخدام الأدوات في الصف لتنفيذ نشاط عملي؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="eng5a" name="eng5" value="A" required>
+              <label for="eng5a">(أ) أشعر بالحماس وأتمكن من تنفيذ النشاط بسهولة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="eng5b" name="eng5" value="B">
+              <label for="eng5b">(ب) أحتاج إلى بعض الوقت للتعود قبل أن أنجز النشاط.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="eng5c" name="eng5" value="C">
+              <label for="eng5c">(ج) أواجه صعوبة وأشعر بالإحباط عند استخدام الأدوات.</label>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 4. تخصص الزراعة -->
+      <fieldset id="group4">
+        <legend>تخصص الزراعة</legend>
+        <div class="question">
+          <label>1- هل تحب العمل في الهواء الطلق والعناية بالنباتات والحيوانات؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="agri1a" name="agri1" value="A" required>
+              <label for="agri1a">(أ) نعم، أحب ذلك كثيرًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="agri1b" name="agri1" value="B">
+              <label for="agri1b">(ب) أحيانًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="agri1c" name="agri1" value="C">
+              <label for="agri1c">(ج) لا.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>2- هل تستمتع بتعلم كيفية زراعة النباتات ورعايتها؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="agri2a" name="agri2" value="A" required>
+              <label for="agri2a">(أ) نعم، أتعلم بسرعة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="agri2b" name="agri2" value="B">
+              <label for="agri2b">(ب) أحيانًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="agri2c" name="agri2" value="C">
+              <label for="agri2c">(ج) لا.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>3- هل ترغب في معرفة طرق الزراعة الحديثة مثل الزراعة العضوية؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="agri3a" name="agri3" value="A" required>
+              <label for="agri3a">(أ) نعم، أحب التعرف عليها.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="agri3b" name="agri3" value="B">
+              <label for="agri3b">(ب) أحيانًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="agri3c" name="agri3" value="C">
+              <label for="agri3c">(ج) لا.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>4- هل تجد استخدام الأدوات الزراعية مثل المجرفة أو المضخة سهلًا؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="agri4a" name="agri4" value="A" required>
+              <label for="agri4a">(أ) نعم، سهل جدًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="agri4b" name="agri4" value="B">
+              <label for="agri4b">(ب) أحيانًا، أحتاج لتجربة أكثر.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="agri4c" name="agri4" value="C">
+              <label for="agri4c">(ج) لا، صعب جدًا.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>5- هل تعتقد أن تعلم الزراعة يساعدك على فهم الطبيعة بشكل أفضل؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="agri5a" name="agri5" value="A" required>
+              <label for="agri5a">(أ) نعم، أرى ذلك بوضوح.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="agri5b" name="agri5" value="B">
+              <label for="agri5b">(ب) إلى حد ما.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="agri5c" name="agri5" value="C">
+              <label for="agri5c">(ج) لا.</label>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 5. تخصص الضيافة -->
+      <fieldset id="group5">
+        <legend>تخصص الضيافة</legend>
+        <div class="question">
+          <label>1- هل تحب تجربة إعداد الأطعمة أو المشروبات في المنزل؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="hosp1a" name="hosp1" value="A" required>
+              <label for="hosp1a">(أ) نعم؛ أحب تجربة وصفات جديدة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="hosp1b" name="hosp1" value="B">
+              <label for="hosp1b">(ب) أحيانًا؛ أجرب بعض الوصفات.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="hosp1c" name="hosp1" value="C">
+              <label for="hosp1c">(ج) لا؛ لا أهتم بذلك.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>2- كيف تشعر عند العمل في بيئة مليئة بالحركة والنشاط مثل الأحداث المدرسية؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="hosp2a" name="hosp2" value="A" required>
+              <label for="hosp2a">(أ) مرتاح؛ أستمتع بالحركة والطاقة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="hosp2b" name="hosp2" value="B">
+              <label for="hosp2b">(ب) معتدل؛ أتحملها لكن أفضل بعض الهدوء.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="hosp2c" name="hosp2" value="C">
+              <label for="hosp2c">(ج) غير مرتاح؛ أفضل بيئة أكثر هدوءًا.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>3- عندما يطلب منك أحد زملائك المساعدة أثناء تنظيم حدث مدرسي، كيف تتصرف عادةً؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="hosp3a" name="hosp3" value="A" required>
+              <label for="hosp3a">(أ) أساعد فورًا دون تردد.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="hosp3b" name="hosp3" value="B">
+              <label for="hosp3b">(ب) أتأكد مما يحتاجه قبل أن أساعد.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="hosp3c" name="hosp3" value="C">
+              <label for="hosp3c">(ج) أتردد وأنتظر أن يطلب مني أحد المساعدة.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>4- هل تفضل العمل مع فريق لتنظيم الأنشطة أم العمل بمفردك؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="hosp4a" name="hosp4" value="A" required>
+              <label for="hosp4a">(أ) أفضل العمل مع فريق؛ أشعر أن التعاون يجعل العمل أفضل.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="hosp4b" name="hosp4" value="B">
+              <label for="hosp4b">(ب) أحيانًا؛ يعتمد ذلك على نوع النشاط.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="hosp4c" name="hosp4" value="C">
+              <label for="hosp4c">(ج) أفضل العمل بمفردي؛ أشعر بالراحة عند العمل بمفردي.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>5- هل تعتقد أنك تستطيع جعل الآخرين يشعرون بالراحة عندما تتحدث معهم؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="hosp5a" name="hosp5" value="A" required>
+              <label for="hosp5a">(أ) نعم؛ أستطيع ذلك بسهولة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="hosp5b" name="hosp5" value="B">
+              <label for="hosp5b">(ب) أحيانًا؛ أحيانًا أكون قادرًا على ذلك.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="hosp5c" name="hosp5" value="C">
+              <label for="hosp5c">(ج) لا؛ أجد صعوبة في ذلك.</label>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 6. تخصص الشعر والجمال -->
+      <fieldset id="group6">
+        <legend>تخصص الشعر والجمال</legend>
+        <div class="question">
+          <label>1- هل تحب تجربة تسريحات الشعر أو استخدام مستحضرات التجميل؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="beauty1a" name="beauty1" value="A" required>
+              <label for="beauty1a">(أ) نعم؛ أحب التجربة دائمًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="beauty1b" name="beauty1" value="B">
+              <label for="beauty1b">(ب) أحيانًا؛ أجرب بعض الأفكار.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="beauty1c" name="beauty1" value="C">
+              <label for="beauty1c">(ج) لا؛ لا أجد في ذلك متعة.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>2- هل تستمتع بمشاهدة برامج الموضة والعناية بالجمال؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="beauty2a" name="beauty2" value="A" required>
+              <label for="beauty2a">(أ) نعم؛ أتابعها باستمرار وأتعلم منها.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="beauty2b" name="beauty2" value="B">
+              <label for="beauty2b">(ب) أحيانًا؛ أشاهدها إذا كان لدي وقت.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="beauty2c" name="beauty2" value="C">
+              <label for="beauty2c">(ج) لا؛ لا أهتم بها.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>3- عندما تقوم بتسريحة شعرك، هل تفضل تجربة أنماط جديدة أم تلتزم بنفس النمط؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="beauty3a" name="beauty3" value="A" required>
+              <label for="beauty3a">(أ) أفضل تجربة أنماط جديدة دائمًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="beauty3b" name="beauty3" value="B">
+              <label for="beauty3b">(ب) أحيانًا؛ أجرب الجديد وأعود إلى المعتاد.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="beauty3c" name="beauty3" value="C">
+              <label for="beauty3c">(ج) أفضل الثبات على النمط نفسه.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>4- هل تحب مساعدة زملائك في اختيار مظهر جميل أو تسريحة مناسبة؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="beauty4a" name="beauty4" value="A" required>
+              <label for="beauty4a">(أ) نعم؛ أحب أن أشارك أفكاري وأساعدهم.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="beauty4b" name="beauty4" value="B">
+              <label for="beauty4b">(ب) أحيانًا؛ إذا طلبوا مني المساعدة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="beauty4c" name="beauty4" value="C">
+              <label for="beauty4c">(ج) لا؛ أفضل عدم التدخل.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>5- هل تعتبر نفسك شخصًا يهتم بالتفاصيل في المظهر والعناية الشخصية؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="beauty5a" name="beauty5" value="A" required>
+              <label for="beauty5a">(أ) نعم؛ أحرص على كل التفاصيل الصغيرة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="beauty5b" name="beauty5" value="B">
+              <label for="beauty5b">(ب) أحيانًا؛ أحيانًا أهتم وأحيانًا لا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="beauty5c" name="beauty5" value="C">
+              <label for="beauty5c">(ج) لا؛ لا أركز كثيرًا على التفاصيل.</label>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 7. تخصص الفن والتصميم -->
+      <fieldset id="group7">
+        <legend>تخصص الفن والتصميم</legend>
+        <div class="question">
+          <label>1- هل تستمتع برسم أو تلوين أو إنشاء أعمال فنية يدوية؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="art1a" name="art1" value="A" required>
+              <label for="art1a">(أ) نعم؛ أحب الرسم والتلوين دائمًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="art1b" name="art1" value="B">
+              <label for="art1b">(ب) أحيانًا؛ أجرب الرسم عند توفر الوقت.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="art1c" name="art1" value="C">
+              <label for="art1c">(ج) لا؛ لا أجد متعة في الرسم.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>2- هل تحب استخدام الكمبيوتر أو البرامج لتصميم صور أو شعارات؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="art2a" name="art2" value="A" required>
+              <label for="art2a">(أ) نعم؛ أستمتع بالتصميم الرقمي.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="art2b" name="art2" value="B">
+              <label for="art2b">(ب) أحيانًا؛ أستخدمها في بعض المشاريع البسيطة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="art2c" name="art2" value="C">
+              <label for="art2c">(ج) لا؛ أفضل العمل اليدوي.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>3- هل تجد متعة في تجربة تنسيق الملابس أو تصميم أزياء بسيطة؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="art3a" name="art3" value="A" required>
+              <label for="art3a">(أ) نعم؛ أحب تجربة أفكار جديدة في تنسيق الملابس.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="art3b" name="art3" value="B">
+              <label for="art3b">(ب) أحيانًا؛ أجرب بعض الأفكار إذا كان الموضوع ممتعًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="art3c" name="art3" value="C">
+              <label for="art3c">(ج) لا؛ لا ألاحظ اهتمامًا كبيرًا في هذا المجال.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>4- هل تحب ترتيب أو تصميم غرف أو مساحات داخلية بطريقة جذابة؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="art4a" name="art4" value="A" required>
+              <label for="art4a">(أ) نعم؛ أستمتع بتنسيق الديكور وترتيب المساحات.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="art4b" name="art4" value="B">
+              <label for="art4b">(ب) أحيانًا؛ أجرب تنظيم الغرف عندما تتاح لي الفرصة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="art4c" name="art4" value="C">
+              <label for="art4c">(ج) لا؛ لا أجد في ذلك متعة كبيرة.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>5- هل تشعر بالإلهام عند التقاط الصور أو تجربة التصوير؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="art5a" name="art5" value="A" required>
+              <label for="art5a">(أ) نعم؛ أجد التصوير ممتعًا وملهمًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="art5b" name="art5" value="B">
+              <label for="art5b">(ب) أحيانًا؛ ألتقط الصور في المناسبات الخاصة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="art5c" name="art5" value="C">
+              <label for="art5c">(ج) لا؛ لا أهتم بالتصوير.</label>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 8. تخصص الوسائط الابداعية -->
+      <fieldset id="group8">
+        <legend>تخصص الوسائط الابداعية</legend>
+        <div class="question">
+          <label>1- هل تحب تصوير الفيديوهات أو التقاط الصور؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="media1a" name="media1" value="A" required>
+              <label for="media1a">(أ) نعم؛ أحب تصوير اللحظات وتسجيلها.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="media1b" name="media1" value="B">
+              <label for="media1b">(ب) أحيانًا؛ أجرب ذلك عندما يكون الموضوع ممتعًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="media1c" name="media1" value="C">
+              <label for="media1c">(ج) لا؛ لا أجد في ذلك متعة.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>2- هل تستمتع بتحرير أو تعديل مقاطع الفيديو أو الصور باستخدام الكمبيوتر؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="media2a" name="media2" value="A" required>
+              <label for="media2a">(أ) نعم؛ أستمتع بتجربة البرامج وتعديل المحتوى.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="media2b" name="media2" value="B">
+              <label for="media2b">(ب) أحيانًا؛ أستخدم البرامج عندما يُطلب مني ذلك.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="media2c" name="media2" value="C">
+              <label for="media2c">(ج) لا؛ أفضل مشاهدة المحتوى دون تعديله.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>3- هل تهتم بالعمل على المؤثرات الصوتية مثل تسجيل الأصوات أو تعديلها؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="media3a" name="media3" value="A" required>
+              <label for="media3a">(أ) نعم؛ أحب سماع الأصوات وتعديلها.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="media3b" name="media3" value="B">
+              <label for="media3b">(ب) أحيانًا؛ أجرب ذلك عند توفر الفرصة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="media3c" name="media3" value="C">
+              <label for="media3c">(ج) لا؛ لا أهتم كثيرًا بالأصوات.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>4- هل تجد متعة في إنشاء رسوم متحركة أو تحريك الصور باستخدام البرامج الرقمية؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="media4a" name="media4" value="A" required>
+              <label for="media4a">(أ) نعم؛ أحب تجربة تحريك الرسوم وتصميم الشخصيات.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="media4b" name="media4" value="B">
+              <label for="media4b">(ب) أحيانًا؛ أجربها إذا كانت بسيطة وممتعة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="media4c" name="media4" value="C">
+              <label for="media4c">(ج) لا؛ لا أجد اهتمامًا في هذا المجال.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>5- هل تستمتع بتجربة تصميم أو تطوير ألعاب بسيطة أو تطبيقات رقمية؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="media5a" name="media5" value="A" required>
+              <label for="media5a">(أ) نعم؛ أحب ابتكار أفكار جديدة للألعاب أو التطبيقات.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="media5b" name="media5" value="B">
+              <label for="media5b">(ب) أحيانًا؛ أستخدم هذه البرامج إذا كان الموضوع جذابًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="media5c" name="media5" value="C">
+              <label for="media5c">(ج) لا؛ لا أجد متعة في ذلك.</label>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 9. تخصص البناء والانشاءات -->
+      <fieldset id="group9">
+        <legend>تخصص البناء والانشاءات</legend>
+        <div class="question">
+          <label>1- هل تحب العمل على بناء نماذج أو ترتيب المساحات؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="build1a" name="build1" value="A" required>
+              <label for="build1a">(أ) نعم؛ أستمتع بتجميع الأجزاء وبناء النماذج.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="build1b" name="build1" value="B">
+              <label for="build1b">(ب) أحيانًا؛ أعمل على ذلك إذا كان ممتعًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="build1c" name="build1" value="C">
+              <label for="build1c">(ج) لا؛ لا أحب هذا النوع من العمل.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>2- هل تجد متعة في قراءة وفهم الرسومات والمخططات البسيطة؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="build2a" name="build2" value="A" required>
+              <label for="build2a">(أ) نعم؛ أحب معرفة كيف تُرسم الأفكار.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="build2b" name="build2" value="B">
+              <label for="build2b">(ب) أحيانًا؛ أستطيع فهمها مع بعض المساعدة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="build2c" name="build2" value="C">
+              <label for="build2c">(ج) لا؛ أجدها صعبة.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>3- عندما ترى مبنىً جميلًا أو تصميمًا مميزًا، هل تشعر بالحماس لمعرفة كيف تم بناؤه؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="build3a" name="build3" value="A" required>
+              <label for="build3a">(أ) نعم؛ أشعر بالإعجاب وأحب معرفة التفاصيل.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="build3b" name="build3" value="B">
+              <label for="build3b">(ب) أحيانًا؛ ألاحظ بعض التفاصيل لكن ليس بعمق.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="build3c" name="build3" value="C">
+              <label for="build3c">(ج) لا؛ لا يثير اهتمامي كثيرًا.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>4- هل تحب العمل مع زملائك على مشاريع صغيرة مثل تنظيم الأدوات أو بناء نماذج؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="build4a" name="build4" value="A" required>
+              <label for="build4a">(أ) نعم؛ أفضل العمل الجماعي.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="build4b" name="build4" value="B">
+              <label for="build4b">(ب) أحيانًا؛ يعتمد ذلك على المشروع.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="build4c" name="build4" value="C">
+              <label for="build4c">(ج) لا؛ أفضل العمل بمفردي.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>5- هل تجد استخدام الأدوات البسيطة مثل المسطرة والفرجار ممتعًا في قياس ورسم المخططات؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="build5a" name="build5" value="A" required>
+              <label for="build5a">(أ) نعم؛ أستمتع باستخدامها.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="build5b" name="build5" value="B">
+              <label for="build5b">(ب) أحيانًا؛ أحتاج لبعض التدريب عليها.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="build5c" name="build5" value="C">
+              <label for="build5c">(ج) لا؛ لا أحب استخدامها.</label>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- 10. تخصص السياحة والسفر -->
+      <fieldset id="group10">
+        <legend>تخصص السياحة والسفر</legend>
+        <div class="question">
+          <label>1- هل تحب السفر واكتشاف أماكن جديدة؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="tour1a" name="tour1" value="A" required>
+              <label for="tour1a">(أ) نعم؛ أشعر بالحماس دائمًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="tour1b" name="tour1" value="B">
+              <label for="tour1b">(ب) أحيانًا؛ يعتمد ذلك على المكان.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="tour1c" name="tour1" value="C">
+              <label for="tour1c">(ج) لا؛ لا أجد متعة في السفر.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>2- عندما تخطط لرحلة مدرسية أو عائلية، هل تستمتع بتنظيمها؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="tour2a" name="tour2" value="A" required>
+              <label for="tour2a">(أ) نعم؛ أحب التخطيط للرحلات.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="tour2b" name="tour2" value="B">
+              <label for="tour2b">(ب) أحيانًا؛ أشارك إذا طُلب مني ذلك.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="tour2c" name="tour2" value="C">
+              <label for="tour2c">(ج) لا؛ أفضل أن أكون جزءًا من الرحلة فقط.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>3- هل تهتم بمعرفة المزيد عن ثقافات وتقاليد أماكن مختلفة؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="tour3a" name="tour3" value="A" required>
+              <label for="tour3a">(أ) نعم؛ أحب التعرف على ثقافات جديدة.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="tour3b" name="tour3" value="B">
+              <label for="tour3b">(ب) أحيانًا؛ أتعلم عندما يكون الموضوع مشوقًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="tour3c" name="tour3" value="C">
+              <label for="tour3c">(ج) لا؛ لا يثير ذلك اهتمامي.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>4- عندما تسمع عن تنظيم مهرجان أو معرض، هل تشعر بالحماس للمشاركة؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="tour4a" name="tour4" value="A" required>
+              <label for="tour4a">(أ) نعم؛ أحب المشاركة في تنظيم الفعاليات.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="tour4b" name="tour4" value="B">
+              <label for="tour4b">(ب) أحيانًا؛ أشارك إذا كان النشاط ممتعًا.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="tour4c" name="tour4" value="C">
+              <label for="tour4c">(ج) لا؛ لا أجد اهتمامًا بتنظيم الفعاليات.</label>
+            </div>
+          </div>
+        </div>
+        <div class="question">
+          <label>5- هل تستمتع بالبحث عن معلومات حول أماكن السفر والمعالم السياحية من خلال الإنترنت أو الكتب؟</label>
+          <div class="options">
+            <div class="option">
+              <input type="radio" id="tour5a" name="tour5" value="A" required>
+              <label for="tour5a">(أ) نعم؛ أحب التعرف على المعلومات قبل السفر.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="tour5b" name="tour5" value="B">
+              <label for="tour5b">(ب) أحيانًا؛ أبحث عنها إذا لفتت انتباهي.</label>
+            </div>
+            <div class="option">
+              <input type="radio" id="tour5c" name="tour5" value="C">
+              <label for="tour5c">(ج) لا؛ لا أهتم كثيرًا بهذا النوع من البحث.</label>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <button type="submit">إرسال المرحلة الثانية</button>
+    </form>
+  </section>
+
+  <!-- قسم عرض النتائج -->
+  <section id="results">
+    <h2>النتائج</h2>
+    <div id="resultDisplay"></div>
+  </section>
+
+  <script>
+    // استبدل القيم التالية بقيم مشروعك من لوحة تحكم Supabase
+    const SUPABASE_URL = 'https://nxktuyzudxmnaispizrb.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54a3R1eXp1ZHhtbmFpc3BpenJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI3MzA5NjEsImV4cCI6MjA1ODMwNjk2MX0._ZkbyOEVufywIMvCVewh-Ffleuhpn4PKtVzoA7yE6fM';
+
+    // إنشاء عميل Supabase
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // كائن لتخزين بيانات الطالب من المرحلة الأولى
+    let phase1Data = {};
+
+    // استهداف عناصر النماذج والأقسام
+    const phase1Form = document.getElementById('phase1Form');
+    const phase2Form = document.getElementById('phase2Form');
+    const phase2Section = document.getElementById('phase2');
+    const resultDisplay = document.getElementById('resultDisplay');
+
+    // التعامل مع نموذج المرحلة الأولى
+    phase1Form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      
+      // قراءة بيانات الطالب
+      const studentName = document.getElementById('studentName').value;
+      const schoolName = document.getElementById('schoolName').value;
+      
+      // قراءة إجابات الأسئلة الأساسية
+      const q1 = document.querySelector('input[name="q1"]:checked').value;
+      const q2 = document.querySelector('input[name="q2"]:checked').value;
+      const q3 = document.querySelector('input[name="q3"]:checked').value;
+      const q4 = document.querySelector('input[name="q4"]:checked').value;
+      const q5 = document.querySelector('input[name="q5"]:checked').value;
+      
+      phase1Data = { studentName, schoolName };
+      
+      // حساب الدرجات للأسئلة الأساسية: (أ)=1، (ب)=0.5، (ج)=0
+      let academicScore = 0;
+      let practicalScore = 0;
+      
+      function scoreAnswer(answer) {
+        if (answer === 'A') academicScore += 1;
+        else if (answer === 'C') practicalScore += 1;
+        else if (answer === 'B') {
+          academicScore += 0.5;
+          practicalScore += 0.5;
+        }
+      }
+      
+      scoreAnswer(q1);
+      scoreAnswer(q2);
+      scoreAnswer(q3);
+      scoreAnswer(q4);
+      scoreAnswer(q5);
+      
+      // تحديد النتيجة النهائية للمرحلة الأولى
+      let finalResult = academicScore >= practicalScore ? 'أكاديمي' : 'مهني';
+      phase1Data.finalSelection = finalResult;
+      
+      // إذا كانت النتيجة أكاديمية، نرسل البيانات مباشرة؛ إذا كانت مهني، نعرض المرحلة الثانية
+      if (finalResult === 'أكاديمي') {
+        submitData(phase1Data);
+      } else {
+        phase2Section.style.display = 'block';
+        // يمكن إظهار العبارة داخل قسم المرحلة الثانية من خلال العنصر #phase2Msg الموجود داخل HTML.
+      }
+    });
+
+    // التعامل مع نموذج المرحلة الثانية
+    phase2Form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      
+      // مصفوفة لتخزين مجموع النقاط لكل تخصص
+      const scores = {
+        "تكنولوجيا المعلومات": 0,
+        "ادارة الاعمال": 0,
+        "الهندسة": 0,
+        "الزراعة": 0,
+        "الضيافة": 0,
+        "الشعر والجمال": 0,
+        "الفن والتصميم": 0,
+        "الوسائط الابداعية": 0,
+        "البناء والانشاءات": 0,
+        "السياحة والسفر": 0
+      };
+
+      // دالة لحساب النقاط (أ=1، ب=0.5، ج=0)
+      function calcPoints(answer) {
+        return answer === 'A' ? 1 : answer === 'B' ? 0.5 : 0;
+      }
+      
+      // المجموعة 1: تكنولوجيا المعلومات
+      scores["تكنولوجيا المعلومات"] += calcPoints(document.querySelector('input[name="it1"]:checked').value);
+      scores["تكنولوجيا المعلومات"] += calcPoints(document.querySelector('input[name="it2"]:checked').value);
+      scores["تكنولوجيا المعلومات"] += calcPoints(document.querySelector('input[name="it3"]:checked').value);
+      scores["تكنولوجيا المعلومات"] += calcPoints(document.querySelector('input[name="it4"]:checked').value);
+      scores["تكنولوجيا المعلومات"] += calcPoints(document.querySelector('input[name="it5"]:checked').value);
+      
+      // المجموعة 2: ادارة الاعمال
+      scores["ادارة الاعمال"] += calcPoints(document.querySelector('input[name="ba1"]:checked').value);
+      scores["ادارة الاعمال"] += calcPoints(document.querySelector('input[name="ba2"]:checked').value);
+      scores["ادارة الاعمال"] += calcPoints(document.querySelector('input[name="ba3"]:checked').value);
+      scores["ادارة الاعمال"] += calcPoints(document.querySelector('input[name="ba4"]:checked').value);
+      scores["ادارة الاعمال"] += calcPoints(document.querySelector('input[name="ba5"]:checked').value);
+      
+      // المجموعة 3: الهندسة
+      scores["الهندسة"] += calcPoints(document.querySelector('input[name="eng1"]:checked').value);
+      scores["الهندسة"] += calcPoints(document.querySelector('input[name="eng2"]:checked').value);
+      scores["الهندسة"] += calcPoints(document.querySelector('input[name="eng3"]:checked').value);
+      scores["الهندسة"] += calcPoints(document.querySelector('input[name="eng4"]:checked').value);
+      scores["الهندسة"] += calcPoints(document.querySelector('input[name="eng5"]:checked').value);
+      
+      // المجموعة 4: الزراعة
+      scores["الزراعة"] += calcPoints(document.querySelector('input[name="agri1"]:checked').value);
+      scores["الزراعة"] += calcPoints(document.querySelector('input[name="agri2"]:checked').value);
+      scores["الزراعة"] += calcPoints(document.querySelector('input[name="agri3"]:checked').value);
+      scores["الزراعة"] += calcPoints(document.querySelector('input[name="agri4"]:checked').value);
+      scores["الزراعة"] += calcPoints(document.querySelector('input[name="agri5"]:checked').value);
+      
+      // المجموعة 5: الضيافة
+      scores["الضيافة"] += calcPoints(document.querySelector('input[name="hosp1"]:checked').value);
+      scores["الضيافة"] += calcPoints(document.querySelector('input[name="hosp2"]:checked').value);
+      scores["الضيافة"] += calcPoints(document.querySelector('input[name="hosp3"]:checked').value);
+      scores["الضيافة"] += calcPoints(document.querySelector('input[name="hosp4"]:checked').value);
+      scores["الضيافة"] += calcPoints(document.querySelector('input[name="hosp5"]:checked').value);
+      
+      // المجموعة 6: الشعر والجمال
+      scores["الشعر والجمال"] += calcPoints(document.querySelector('input[name="beauty1"]:checked').value);
+      scores["الشعر والجمال"] += calcPoints(document.querySelector('input[name="beauty2"]:checked').value);
+      scores["الشعر والجمال"] += calcPoints(document.querySelector('input[name="beauty3"]:checked').value);
+      scores["الشعر والجمال"] += calcPoints(document.querySelector('input[name="beauty4"]:checked').value);
+      scores["الشعر والجمال"] += calcPoints(document.querySelector('input[name="beauty5"]:checked').value);
+      
+      // المجموعة 7: الفن والتصميم
+      scores["الفن والتصميم"] += calcPoints(document.querySelector('input[name="art1"]:checked').value);
+      scores["الفن والتصميم"] += calcPoints(document.querySelector('input[name="art2"]:checked').value);
+      scores["الفن والتصميم"] += calcPoints(document.querySelector('input[name="art3"]:checked').value);
+      scores["الفن والتصميم"] += calcPoints(document.querySelector('input[name="art4"]:checked').value);
+      scores["الفن والتصميم"] += calcPoints(document.querySelector('input[name="art5"]:checked').value);
+      
+      // المجموعة 8: الوسائط الابداعية
+      scores["الوسائط الابداعية"] += calcPoints(document.querySelector('input[name="media1"]:checked').value);
+      scores["الوسائط الابداعية"] += calcPoints(document.querySelector('input[name="media2"]:checked').value);
+      scores["الوسائط الابداعية"] += calcPoints(document.querySelector('input[name="media3"]:checked').value);
+      scores["الوسائط الابداعية"] += calcPoints(document.querySelector('input[name="media4"]:checked').value);
+      scores["الوسائط الابداعية"] += calcPoints(document.querySelector('input[name="media5"]:checked').value);
+      
+      // المجموعة 9: البناء والانشاءات
+      scores["البناء والانشاءات"] += calcPoints(document.querySelector('input[name="build1"]:checked').value);
+      scores["البناء والانشاءات"] += calcPoints(document.querySelector('input[name="build2"]:checked').value);
+      scores["البناء والانشاءات"] += calcPoints(document.querySelector('input[name="build3"]:checked').value);
+      scores["البناء والانشاءات"] += calcPoints(document.querySelector('input[name="build4"]:checked').value);
+      scores["البناء والانشاءات"] += calcPoints(document.querySelector('input[name="build5"]:checked').value);
+      
+      // المجموعة 10: السياحة والسفر
+      scores["السياحة والسفر"] += calcPoints(document.querySelector('input[name="tour1"]:checked').value);
+      scores["السياحة والسفر"] += calcPoints(document.querySelector('input[name="tour2"]:checked').value);
+      scores["السياحة والسفر"] += calcPoints(document.querySelector('input[name="tour3"]:checked').value);
+      scores["السياحة والسفر"] += calcPoints(document.querySelector('input[name="tour4"]:checked').value);
+      scores["السياحة والسفر"] += calcPoints(document.querySelector('input[name="tour5"]:checked').value);
+      
+      // تحديد التخصص الذي حصل على أعلى مجموع نقاط
+      let selectedSpecialization = "";
+      let maxScore = -1;
+      for (const spec in scores) {
+        if (scores[spec] > maxScore) {
+          maxScore = scores[spec];
+          selectedSpecialization = spec;
+        }
+      }
+      
+      phase1Data.finalSelection = selectedSpecialization;
+      submitData(phase1Data);
+    });
+
+    // دالة إرسال البيانات إلى Supabase في جدول "student_choices"
+    async function submitData(dataToSubmit) {
+      const { data, error } = await supabaseClient
+        .from('student_choices')
+        .insert([
+          {
+            student_name: dataToSubmit.studentName,
+            school_name: dataToSubmit.schoolName,
+            final_selection: dataToSubmit.finalSelection
+          }
+        ]);
+      if (error) {
+        console.error('خطأ في إرسال البيانات:', error);
+        resultDisplay.innerHTML = `<p style="color:red;">حدث خطأ أثناء تسجيل البيانات. يرجى المحاولة مرة أخرى.</p>`;
+      } else {
+        console.log('تم إرسال البيانات:', data);
+        resultDisplay.innerHTML = `
+          <div class="result-title">التخصص المقترح: ${dataToSubmit.finalSelection}</div>
+          <div class="result-msg">تم تسجيل بياناتك بنجاح!</div>
+        `;
+        phase1Form.reset();
+        phase2Form.reset();
+        phase2Section.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
